@@ -11,15 +11,22 @@ use core::fmt;
 #[cfg(not(feature = "std"))]
 use alloc_prelude::*;
 
-use mbedtls_sys::*;
+#[mbedtls_use]
+use {
+    mbedtls_x509_csr_info, mbedtls_x509_csr_parse, mbedtls_x509_csr_parse_der,
+    mbedtls_x509_dn_gets, mbedtls_x509write_csr_der, mbedtls_x509write_csr_pem,
+    mbedtls_x509write_csr_set_extension, mbedtls_x509write_csr_set_key,
+    mbedtls_x509write_csr_set_key_usage, mbedtls_x509write_csr_set_md_alg,
+    mbedtls_x509write_csr_set_subject_name,
+};
 
 use error::IntoResult;
 
 define!(
 /// Certificate Signing Request
-struct Csr(x509_csr) {
-	fn init=x509_csr_init;
-	fn drop=x509_csr_free;
+struct Csr(mbedtls_x509_csr) {
+	fn init=mbedtls_x509_csr_init;
+	fn drop=mbedtls_x509_csr_free;
 });
 
 impl Csr {
@@ -68,9 +75,9 @@ impl fmt::Debug for Csr {
     }
 }
 
-define!(struct Builder<'a>(x509write_csr) {
-	pub fn new=x509write_csr_init;
-	fn drop=x509write_csr_free;
+define!(struct Builder<'a>(mbedtls_x509write_csr) {
+	pub fn new = mbedtls_x509write_csr_init;
+	fn drop = mbedtls_x509write_csr_free;
 });
 
 impl<'a> Builder<'a> {

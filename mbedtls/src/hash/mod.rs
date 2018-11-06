@@ -7,19 +7,30 @@
  * according to those terms. */
 
 use error::IntoResult;
+
+#[mbedtls_use]
+use {
+    mbedtls_ecp_keypair, mbedtls_md, mbedtls_md_finish, mbedtls_md_get_size, mbedtls_md_get_type,
+    mbedtls_md_hmac, mbedtls_md_info_from_type, mbedtls_md_info_t, mbedtls_md_setup,
+    mbedtls_md_starts, mbedtls_md_type_t, mbedtls_md_update, mbedtls_pkcs5_pbkdf2_hmac,
+    mbedtls_rsa_context, mbedtls_rsa_set_padding, MBEDTLS_MD_MD2, MBEDTLS_MD_MD4, MBEDTLS_MD_MD5,
+    MBEDTLS_MD_NONE, MBEDTLS_MD_RIPEMD160, MBEDTLS_MD_SHA1, MBEDTLS_MD_SHA224, MBEDTLS_MD_SHA256,
+    MBEDTLS_MD_SHA384, MBEDTLS_MD_SHA512,
+};
+
 use mbedtls_sys::*;
 
-define!(enum Type -> md_type_t {
-	None => MD_NONE,
-	Md2 => MD_MD2,
-	Md4 => MD_MD4,
-	Md5 => MD_MD5,
-	Sha1 => MD_SHA1,
-	Sha224 => MD_SHA224,
-	Sha256 => MD_SHA256,
-	Sha384 => MD_SHA384,
-	Sha512 => MD_SHA512,
-	Ripemd => MD_RIPEMD160,
+define!(enum Type -> mbedtls_md_type_t {
+	None => MBEDTLS_MD_NONE,
+	Md2 => MBEDTLS_MD_MD2,
+	Md4 => MBEDTLS_MD_MD4,
+	Md5 => MBEDTLS_MD_MD5,
+	Sha1 => MBEDTLS_MD_SHA1,
+	Sha224 => MBEDTLS_MD_SHA224,
+	Sha256 => MBEDTLS_MD_SHA256,
+	Sha384 => MBEDTLS_MD_SHA384,
+	Sha512 => MBEDTLS_MD_SHA512,
+	Ripemd => MBEDTLS_MD_RIPEMD160,
 });
 
 impl From<md_type_t> for Type {
@@ -57,18 +68,18 @@ impl Into<*const md_info_t> for MdInfo {
     }
 }
 
-define!(struct Md(md_context_t) {
-	fn init=md_init;
-	fn drop=md_free;
+define!(struct Md(mbedtls_md_context_t) {
+	fn init = mbedtls_md_init;
+	fn drop = mbedtls_md_free;
 	impl<'a> Into<*>;
 });
 
 impl MdInfo {
     pub fn size(&self) -> usize {
-        unsafe { ::mbedtls_sys::md_get_size(self.inner).into() }
+        unsafe { md_get_size(self.inner).into() }
     }
     pub fn get_type(&self) -> Type {
-        unsafe { ::mbedtls_sys::md_get_type(self.inner).into() }
+        unsafe { md_get_type(self.inner).into() }
     }
 }
 
@@ -89,9 +100,7 @@ impl Md {
 
     pub fn update(&mut self, data: &[u8]) -> ::Result<()> {
         unsafe {
-            try!(
-                ::mbedtls_sys::md_update(&mut self.inner, data.as_ptr(), data.len()).into_result()
-            );
+            try!(md_update(&mut self.inner, data.as_ptr(), data.len()).into_result());
         }
         Ok(())
     }
@@ -102,7 +111,7 @@ impl Md {
             if out.len() < olen {
                 return Err(::Error::MdBadInputData);
             }
-            try!(::mbedtls_sys::md_finish(&mut self.inner, out.as_mut_ptr()).into_result());
+            try!(md_finish(&mut self.inner, out.as_mut_ptr()).into_result());
             Ok(olen)
         }
     }
@@ -119,7 +128,7 @@ impl Md {
                 return Err(::Error::MdBadInputData);
             }
             try!(
-                ::mbedtls_sys::md(md.inner, data.as_ptr(), data.len(), out.as_mut_ptr())
+                ::mbedtls_sys::mbedtls_md(md.inner, data.as_ptr(), data.len(), out.as_mut_ptr())
                     .into_result()
             );
             Ok(olen)
@@ -138,7 +147,7 @@ impl Md {
                 return Err(::Error::MdBadInputData);
             }
             try!(
-                ::mbedtls_sys::md_hmac(
+                md_hmac(
                     md.inner,
                     key.as_ptr(),
                     key.len(),

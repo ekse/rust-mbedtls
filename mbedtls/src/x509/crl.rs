@@ -9,14 +9,19 @@
 use core::fmt;
 
 use mbedtls_sys::*;
+#[mbedtls_use]
+use {
+    mbedtls_x509_crl_free, mbedtls_x509_crl_info, mbedtls_x509_crl_init, mbedtls_x509_crl_parse,
+    mbedtls_x509_crl_parse_der,
+};
 
 use error::IntoResult;
 
 define!(
 /// Certificate Revocation List
-struct Crl(x509_crl) {
-	pub fn new=x509_crl_init;
-	fn drop=x509_crl_free;
+struct Crl(mbedtls_x509_crl) {
+	pub fn new = mbedtls_x509_crl_init;
+	fn drop = mbedtls_x509_crl_free;
 	impl<'a> Into<*>;
 });
 

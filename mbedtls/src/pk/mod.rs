@@ -8,6 +8,20 @@
 
 #[cfg(not(feature = "std"))]
 use alloc_prelude::*;
+
+#[mbedtls_use]
+use {
+    mbedtls_ecp_gen_key, mbedtls_ecp_keypair, mbedtls_pk_can_do, mbedtls_pk_check_pair,
+    mbedtls_pk_context, mbedtls_pk_decrypt, mbedtls_pk_encrypt, mbedtls_pk_free,
+    mbedtls_pk_get_bitlen, mbedtls_pk_get_name, mbedtls_pk_get_type, mbedtls_pk_info_from_type,
+    mbedtls_pk_init, mbedtls_pk_parse_key, mbedtls_pk_parse_public_key, mbedtls_pk_setup,
+    mbedtls_pk_sign, mbedtls_pk_type_t, mbedtls_pk_verify, mbedtls_pk_write_key_der,
+    mbedtls_pk_write_key_pem, mbedtls_pk_write_pubkey_der, mbedtls_pk_write_pubkey_pem,
+    mbedtls_rsa_context, mbedtls_rsa_gen_key, mbedtls_rsa_set_padding, MBEDTLS_PK_ECDSA,
+    MBEDTLS_PK_ECKEY, MBEDTLS_PK_ECKEY_DH, MBEDTLS_PK_NONE, MBEDTLS_PK_RSA, MBEDTLS_PK_RSASSA_PSS,
+    MBEDTLS_PK_RSA_ALT, MBEDTLS_RSA_PKCS_V15, MBEDTLS_RSA_PKCS_V21,
+};
+
 use mbedtls_sys::*;
 
 use error::IntoResult;
@@ -19,15 +33,15 @@ mod ec;
 #[doc(inline)]
 pub use self::ec::{EcGroupId, ECDSA_MAX_LEN};
 
-define!(enum Type -> pk_type_t {
-	None => PK_NONE,
-	Rsa => PK_RSA,
-	Eckey => PK_ECKEY,
-	EckeyDh => PK_ECKEY_DH,
+define!(enum Type -> mbedtls_pk_type_t {
+	None => MBEDTLS_PK_NONE,
+	Rsa => MBEDTLS_PK_RSA,
+	Eckey => MBEDTLS_PK_ECKEY,
+	EckeyDh => MBEDTLS_PK_ECKEY_DH,
 	// This type is never returned by the mbedTLS key parsing routines
-	Ecdsa => PK_ECDSA,
-	RsaAlt => PK_RSA_ALT,
-	RsassaPss => PK_RSASSA_PSS,
+	Ecdsa => MBEDTLS_PK_ECDSA,
+	RsaAlt => MBEDTLS_PK_RSA_ALT,
+	RsassaPss => MBEDTLS_PK_RSASSA_PSS,
 });
 
 impl From<pk_type_t> for Type {
@@ -59,9 +73,9 @@ pub enum Options {
 }
 
 define!(#[repr(C)]
-struct Pk(pk_context) {
-	fn init = pk_init;
-	fn drop = pk_free;
+struct Pk(mbedtls_pk_context) {
+	fn init = mbedtls_pk_init;
+	fn drop = mbedtls_pk_free;
 	impl<'a> Into<*>;
 	impl<'a> UnsafeFrom<*>;
 });
@@ -160,8 +174,8 @@ impl Pk {
     }
 
     /// Key length in bits
-    getter!(len() -> usize = fn pk_get_bitlen);
-    getter!(pk_type() -> Type = fn pk_get_type);
+    getter!(len() -> usize = fn mbedtls_pk_get_bitlen);
+    getter!(pk_type() -> Type = fn mbedtls_pk_get_type);
 
     pub fn curve(&self) -> ::Result<EcGroupId> {
         match self.pk_type() {

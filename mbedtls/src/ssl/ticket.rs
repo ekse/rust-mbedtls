@@ -10,7 +10,13 @@ use cipher::raw::CipherType;
 use error::IntoResult;
 use mbedtls_sys::types::raw_types::{c_int, c_uchar, c_void};
 use mbedtls_sys::types::size_t;
-use mbedtls_sys::*;
+
+#[mbedtls_use]
+use {
+    mbedtls_ssl_session, mbedtls_ssl_ticket_context, mbedtls_ssl_ticket_free,
+    mbedtls_ssl_ticket_init, mbedtls_ssl_ticket_parse, mbedtls_ssl_ticket_setup,
+    mbedtls_ssl_ticket_write,
+};
 
 pub trait TicketCallback {
     unsafe extern "C" fn call_write(
@@ -31,9 +37,9 @@ pub trait TicketCallback {
     fn data_ptr(&mut self) -> *mut c_void;
 }
 
-define!(struct TicketContext<'rng>(ssl_ticket_context) {
-	fn init = ssl_ticket_init;
-	fn drop = ssl_ticket_free;
+define!(struct TicketContext<'rng>(mbedtls_ssl_ticket_context) {
+	fn init = mbedtls_ssl_ticket_init;
+	fn drop = mbedtls_ssl_ticket_free;
 });
 
 impl<'rng> TicketContext<'rng> {

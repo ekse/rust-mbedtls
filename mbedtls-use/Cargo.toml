@@ -1,0 +1,11 @@
+[package]
+name = "mbedtls_use"
+version = "0.1.0"
+authors = ["Sébastien Duquette <ekse.0x@gmail.com>"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "0.6.9"
+syn = {version = "0.15.17", features = ["full"]}

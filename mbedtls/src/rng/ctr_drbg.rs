@@ -8,10 +8,13 @@
 
 use mbedtls_sys::types::raw_types::{c_int, c_uchar, c_void};
 use mbedtls_sys::types::size_t;
-pub use mbedtls_sys::CTR_DRBG_RESEED_INTERVAL as RESEED_INTERVAL;
-use mbedtls_sys::{
-    ctr_drbg_random, ctr_drbg_reseed, ctr_drbg_seed, ctr_drbg_set_prediction_resistance,
-    ctr_drbg_update, CTR_DRBG_PR_OFF, CTR_DRBG_PR_ON,
+pub use mbedtls_sys::MBEDTLS_CTR_DRBG_RESEED_INTERVAL as RESEED_INTERVAL;
+
+#[mbedtls_use]
+use {
+    mbedtls_ctr_drbg_random, mbedtls_ctr_drbg_reseed, mbedtls_ctr_drbg_seed,
+    mbedtls_ctr_drbg_set_prediction_resistance, mbedtls_ctr_drbg_update, MBEDTLS_CTR_DRBG_PR_OFF,
+    MBEDTLS_CTR_DRBG_PR_ON,
 };
 
 use super::{EntropyCallback, RngCallback};
@@ -39,7 +42,8 @@ use core::ops::{Deref, DerefMut};
 
 mod private {
     use core::marker::PhantomData;
-    use mbedtls_sys::{ctr_drbg_context, ctr_drbg_free, ctr_drbg_init};
+    #[mbedtls_use]
+    use {mbedtls_ctr_drbg_context, mbedtls_ctr_drbg_free, mbedtls_ctr_drbg_init};
 
     pub struct CtrDrbgInner<'entropy> {
         pub(super) inner: ctr_drbg_context,
@@ -122,7 +126,7 @@ impl<'entropy> CtrDrbg<'entropy> {
     }
 
     pub fn prediction_resistance(&self) -> bool {
-        if self.inner.prediction_resistance == CTR_DRBG_PR_OFF {
+        if self.inner.prediction_resistance == CTR_DRBG_PR_OFF as c_int {
             false
         } else {
             true
@@ -133,15 +137,19 @@ impl<'entropy> CtrDrbg<'entropy> {
         unsafe {
             ctr_drbg_set_prediction_resistance(
                 &mut self.inner,
-                if pr { CTR_DRBG_PR_ON } else { CTR_DRBG_PR_OFF },
+                if pr {
+                    CTR_DRBG_PR_ON as c_int
+                } else {
+                    CTR_DRBG_PR_OFF as c_int
+                },
             )
         }
     }
 
     getter!(entropy_len() -> size_t = .entropy_len);
-    setter!(set_entropy_len(len: size_t) = ctr_drbg_set_entropy_len);
+    setter!(set_entropy_len(len: size_t) = mbedtls_ctr_drbg_set_entropy_len);
     getter!(reseed_interval() -> c_int = .reseed_interval);
-    setter!(set_reseed_interval(i: c_int) = ctr_drbg_set_reseed_interval);
+    setter!(set_reseed_interval(i: c_int) = mbedtls_ctr_drbg_set_reseed_interval);
 
     pub fn reseed(&mut self, additional_entropy: Option<&[u8]>) -> ::Result<()> {
         unsafe {

@@ -6,43 +6,48 @@
  * option. This file may not be copied, modified, or distributed except
  * according to those terms. */
 
-use mbedtls_sys::ECDSA_MAX_LEN as MBEDTLS_ECDSA_MAX_LEN;
-use mbedtls_sys::*;
+#[mbedtls_use]
+use {
+    mbedtls_ecdh_calc_secret, mbedtls_ecdh_free, mbedtls_ecdh_init, mbedtls_ecp_copy,
+    mbedtls_ecp_group_copy, mbedtls_ecp_group_id, mbedtls_ecp_keypair_free,
+    mbedtls_ecp_keypair_init, mbedtls_mpi_copy, MBEDTLS_ECP_DP_NONE,
+};
 
 use error::IntoResult;
+use mbedtls_sys::*;
 
-define!(enum EcGroupId -> ecp_group_id {
-	None => ECP_DP_NONE,
-	SecP192R1 => ECP_DP_SECP192R1,
-	SecP224R1 => ECP_DP_SECP224R1,
-	SecP256R1 => ECP_DP_SECP256R1,
-	SecP384R1 => ECP_DP_SECP384R1,
-	SecP521R1 => ECP_DP_SECP521R1,
-	Bp256R1 => ECP_DP_BP256R1,
-	Bp384R1 => ECP_DP_BP384R1,
-	Bp512R1 => ECP_DP_BP512R1,
-	Curve25519 => ECP_DP_CURVE25519,
-	SecP192K1 => ECP_DP_SECP192K1,
-	SecP224K1 => ECP_DP_SECP224K1,
-	SecP256K1 => ECP_DP_SECP256K1,
+define!(enum EcGroupId -> mbedtls_ecp_group_id {
+	None => MBEDTLS_ECP_DP_NONE,
+	SecP192R1 => MBEDTLS_ECP_DP_SECP192R1,
+	SecP224R1 => MBEDTLS_ECP_DP_SECP224R1,
+	SecP256R1 => MBEDTLS_ECP_DP_SECP256R1,
+	SecP384R1 => MBEDTLS_ECP_DP_SECP384R1,
+	SecP521R1 => MBEDTLS_ECP_DP_SECP521R1,
+	Bp256R1 => MBEDTLS_ECP_DP_BP256R1,
+	Bp384R1 => MBEDTLS_ECP_DP_BP384R1,
+	Bp512R1 => MBEDTLS_ECP_DP_BP512R1,
+	Curve25519 => MBEDTLS_ECP_DP_CURVE25519,
+	SecP192K1 => MBEDTLS_ECP_DP_SECP192K1,
+	SecP224K1 => MBEDTLS_ECP_DP_SECP224K1,
+	SecP256K1 => MBEDTLS_ECP_DP_SECP256K1,
 });
 
 impl From<ecp_group_id> for EcGroupId {
     fn from(inner: ecp_group_id) -> EcGroupId {
         match inner {
-            ECP_DP_NONE => EcGroupId::None,
-            ECP_DP_SECP192R1 => EcGroupId::SecP192R1,
-            ECP_DP_SECP224R1 => EcGroupId::SecP224R1,
-            ECP_DP_SECP256R1 => EcGroupId::SecP256R1,
-            ECP_DP_SECP384R1 => EcGroupId::SecP384R1,
-            ECP_DP_SECP521R1 => EcGroupId::SecP521R1,
-            ECP_DP_BP256R1 => EcGroupId::Bp256R1,
-            ECP_DP_BP384R1 => EcGroupId::Bp384R1,
-            ECP_DP_BP512R1 => EcGroupId::Bp512R1,
-            ECP_DP_CURVE25519 => EcGroupId::Curve25519,
-            ECP_DP_SECP192K1 => EcGroupId::SecP192K1,
-            ECP_DP_SECP224K1 => EcGroupId::SecP224K1,
-            ECP_DP_SECP256K1 => EcGroupId::SecP256K1,
+            MBEDTLS_ECP_DP_NONE => EcGroupId::None,
+            MBEDTLS_ECP_DP_SECP192R1 => EcGroupId::SecP192R1,
+            MBEDTLS_ECP_DP_SECP224R1 => EcGroupId::SecP224R1,
+            MBEDTLS_ECP_DP_SECP256R1 => EcGroupId::SecP256R1,
+            MBEDTLS_ECP_DP_SECP384R1 => EcGroupId::SecP384R1,
+            MBEDTLS_ECP_DP_SECP521R1 => EcGroupId::SecP521R1,
+            MBEDTLS_ECP_DP_BP256R1 => EcGroupId::Bp256R1,
+            MBEDTLS_ECP_DP_BP384R1 => EcGroupId::Bp384R1,
+            MBEDTLS_ECP_DP_BP512R1 => EcGroupId::Bp512R1,
+            MBEDTLS_ECP_DP_CURVE25519 => EcGroupId::Curve25519,
+            MBEDTLS_ECP_DP_SECP192K1 => EcGroupId::SecP192K1,
+            MBEDTLS_ECP_DP_SECP224K1 => EcGroupId::SecP224K1,
+            MBEDTLS_ECP_DP_SECP256K1 => EcGroupId::SecP256K1,
             _ => panic!("Invalid EC group ID"),
         }
     }
@@ -53,17 +58,17 @@ impl From<ecp_group_id> for EcGroupId {
 pub const ECDSA_MAX_LEN: usize = MBEDTLS_ECDSA_MAX_LEN as usize;
 
 define!(#[repr(C)]
-struct EcpKeypair(ecp_keypair) {
-	fn init = ecp_keypair_init;
-	fn drop = ecp_keypair_free;
+struct EcpKeypair(mbedtls_ecp_keypair) {
+	fn init = mbedtls_ecp_keypair_init;
+	fn drop = mbedtls_ecp_keypair_free;
 	impl<'a> Into<*>;
 	impl<'a> UnsafeFrom<*>;
 });
 
 define!(#[repr(C)]
-struct Ecdh(ecdh_context) {
-	fn init = ecdh_init;
-	fn drop = ecdh_free;
+struct Ecdh(mbedtls_ecdh_context) {
+	fn init = mbedtls_ecdh_init;
+	fn drop = mbedtls_ecdh_free;
 	impl<'a> Into<*>;
 });
 

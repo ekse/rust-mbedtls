@@ -8,15 +8,21 @@
 
 use mbedtls_sys::types::raw_types::{c_int, c_uchar, c_void};
 use mbedtls_sys::types::size_t;
-use mbedtls_sys::*;
+
+#[mbedtls_use]
+use {
+    mbedtls_entropy_add_source, mbedtls_entropy_context, mbedtls_entropy_free,
+    mbedtls_entropy_func, mbedtls_entropy_gather, mbedtls_entropy_init,
+    mbedtls_entropy_update_manual, MBEDTLS_ENTROPY_SOURCE_STRONG, MBEDTLS_ENTROPY_SOURCE_WEAK,
+};
 
 use error::IntoResult;
 
 callback!(EntropySourceCallback(data: *mut c_uchar, size: size_t, out: *mut size_t) -> c_int);
 
-define!(struct OsEntropy<'source>(entropy_context) {
-	pub fn new=entropy_init;
-	fn drop=entropy_free;
+define!(struct OsEntropy<'source>(mbedtls_entropy_context) {
+	pub fn new=mbedtls_entropy_init;
+	fn drop=mbedtls_entropy_free;
 });
 
 #[cfg(feature = "threading")]
@@ -37,9 +43,9 @@ impl<'source> OsEntropy<'source> {
                     source.data_ptr(),
                     threshold,
                     if strong {
-                        ENTROPY_SOURCE_STRONG
+                        ENTROPY_SOURCE_STRONG as c_int
                     } else {
-                        ENTROPY_SOURCE_WEAK
+                        ENTROPY_SOURCE_WEAK as c_int
                     }
                 ).into_result()
             )

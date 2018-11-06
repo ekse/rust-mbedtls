@@ -6,9 +6,9 @@
  * option. This file may not be copied, modified, or distributed except
  * according to those terms. */
 
-use mbedtls_sys::*;
+use mbedtls_sys::mbedtls_x509_crt_profile;
 
-define!(#[repr(C)] struct Profile(x509_crt_profile) {
+define!(#[repr(C)] struct Profile(mbedtls_x509_crt_profile) {
 	impl<'a> Into<*>;
 });
 

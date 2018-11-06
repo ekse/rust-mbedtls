@@ -51,12 +51,16 @@ pub unsafe fn disable() {
 }
 
 pub use mbedtls_sys::{
-    aes_self_test as aes, arc4_self_test as arc4, base64_self_test as base64,
-    camellia_self_test as camellia, ccm_self_test as ccm, ctr_drbg_self_test as ctr_drbg,
-    des_self_test as des, dhm_self_test as dhm, ecjpake_self_test as ecjpake, ecp_self_test as ecp,
-    entropy_self_test as entropy, gcm_self_test as gcm, hmac_drbg_self_test as hmac_drbg,
-    md2_self_test as md2, md4_self_test as md4, md5_self_test as md5, mpi_self_test as mpi,
-    pkcs5_self_test as pkcs5, ripemd160_self_test as ripemd160, rsa_self_test as rsa,
-    sha1_self_test as sha1, sha256_self_test as sha256, sha512_self_test as sha512,
-    x509_self_test as x509, xtea_self_test as xtea,
+    mbedtls_aes_self_test as aes, mbedtls_arc4_self_test as arc4,
+    mbedtls_base64_self_test as base64, mbedtls_camellia_self_test as camellia,
+    mbedtls_ccm_self_test as ccm, mbedtls_ctr_drbg_self_test as ctr_drbg,
+    mbedtls_des_self_test as des, mbedtls_dhm_self_test as dhm,
+    mbedtls_ecjpake_self_test as ecjpake, mbedtls_ecp_self_test as ecp,
+    mbedtls_entropy_self_test as entropy, mbedtls_gcm_self_test as gcm,
+    mbedtls_hmac_drbg_self_test as hmac_drbg, mbedtls_md2_self_test as md2,
+    mbedtls_md4_self_test as md4, mbedtls_md5_self_test as md5, mbedtls_mpi_self_test as mpi,
+    mbedtls_pkcs5_self_test as pkcs5, mbedtls_ripemd160_self_test as ripemd160,
+    mbedtls_rsa_self_test as rsa, mbedtls_sha1_self_test as sha1,
+    mbedtls_sha256_self_test as sha256, mbedtls_sha512_self_test as sha512,
+    mbedtls_x509_self_test as x509, mbedtls_xtea_self_test as xtea,
 };

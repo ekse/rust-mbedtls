@@ -15,6 +15,15 @@ use mbedtls_sys::types::raw_types::{c_int, c_uchar, c_void};
 use mbedtls_sys::types::size_t;
 use mbedtls_sys::*;
 
+#[mbedtls_use]
+use {
+    mbedtls_ssl_close_notify, mbedtls_ssl_config, mbedtls_ssl_context, mbedtls_ssl_free,
+    mbedtls_ssl_get_peer_cert, mbedtls_ssl_get_verify_result, mbedtls_ssl_handshake,
+    mbedtls_ssl_init, mbedtls_ssl_read, mbedtls_ssl_session_reset, mbedtls_ssl_set_bio,
+    mbedtls_ssl_set_hostname, mbedtls_ssl_set_hs_authmode, mbedtls_ssl_set_hs_ca_chain,
+    mbedtls_ssl_set_hs_own_cert, mbedtls_ssl_setup, mbedtls_ssl_write,
+};
+
 use error::IntoResult;
 use private::UnsafeFrom;
 use ssl::config::{AuthMode, Config};
@@ -48,7 +57,7 @@ impl<IO: Read + Write> IoCallback for IO {
         };
         match (&mut *(user_data as *mut IO)).read(::core::slice::from_raw_parts_mut(data, len)) {
             Ok(i) => i as c_int,
-            Err(_) => ::mbedtls_sys::ERR_NET_RECV_FAILED,
+            Err(_) => ::mbedtls_sys::MBEDTLS_ERR_NET_RECV_FAILED,
         }
     }
 
@@ -64,7 +73,7 @@ impl<IO: Read + Write> IoCallback for IO {
         };
         match (&mut *(user_data as *mut IO)).write(::core::slice::from_raw_parts(data, len)) {
             Ok(i) => i as c_int,
-            Err(_) => ::mbedtls_sys::ERR_NET_SEND_FAILED,
+            Err(_) => ::mbedtls_sys::MBEDTLS_ERR_NET_SEND_FAILED,
         }
     }
 
@@ -73,9 +82,9 @@ impl<IO: Read + Write> IoCallback for IO {
     }
 }
 
-define!(struct Context<'config>(ssl_context) {
-	fn init = ssl_init;
-	fn drop = ssl_free;
+define!(struct Context<'config>(mbedtls_ssl_context) {
+	fn init = mbedtls_ssl_init;
+	fn drop = mbedtls_ssl_free;
 	impl<'a> Into<*>;
 	impl<'a> UnsafeFrom<*>;
 });

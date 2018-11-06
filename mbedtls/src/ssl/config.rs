@@ -12,6 +12,20 @@ use mbedtls_sys::types::raw_types::{c_char, c_int, c_uchar, c_uint, c_void};
 use mbedtls_sys::types::size_t;
 use mbedtls_sys::*;
 
+#[mbedtls_use]
+use {
+    mbedtls_ecp_group_id, mbedtls_ssl_conf_ca_chain, mbedtls_ssl_conf_cert_profile,
+    mbedtls_ssl_conf_ciphersuites, mbedtls_ssl_conf_ciphersuites_for_version,
+    mbedtls_ssl_conf_curves, mbedtls_ssl_conf_dh_param_ctx, mbedtls_ssl_conf_own_cert,
+    mbedtls_ssl_conf_session_tickets_cb, mbedtls_ssl_conf_sni, mbedtls_ssl_conf_verify,
+    mbedtls_ssl_config, mbedtls_ssl_config_defaults, mbedtls_ssl_config_free,
+    mbedtls_ssl_config_init, mbedtls_ssl_context, mbedtls_x509_crt, MBEDTLS_SSL_IS_CLIENT,
+    MBEDTLS_SSL_IS_SERVER, MBEDTLS_SSL_PRESET_DEFAULT, MBEDTLS_SSL_PRESET_SUITEB,
+    MBEDTLS_SSL_SESSION_TICKETS_DISABLED, MBEDTLS_SSL_SESSION_TICKETS_ENABLED,
+    MBEDTLS_SSL_TRANSPORT_DATAGRAM, MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_VERIFY_NONE,
+    MBEDTLS_SSL_VERIFY_OPTIONAL, MBEDTLS_SSL_VERIFY_REQUIRED,
+};
+
 use error::IntoResult;
 use pk::dhparam::Dhm;
 use private::UnsafeFrom;
@@ -20,41 +34,41 @@ use ssl::ticket::TicketCallback;
 use x509::{certificate, Crl, LinkedCertificate, Profile, VerifyError};
 
 define!(enum Endpoint -> c_int {
-	Client => SSL_IS_CLIENT,
-	Server => SSL_IS_SERVER,
+	Client => MBEDTLS_SSL_IS_CLIENT,
+	Server => MBEDTLS_SSL_IS_SERVER,
 });
 
 define!(enum Transport -> c_int {
 	/// TLS
-	Stream => SSL_TRANSPORT_STREAM,
+	Stream => MBEDTLS_SSL_TRANSPORT_STREAM,
 	/// DTLS
-	Datagram => SSL_TRANSPORT_DATAGRAM,
+	Datagram => MBEDTLS_SSL_TRANSPORT_DATAGRAM,
 });
 
 define!(enum Preset -> c_int {
-	Default => SSL_PRESET_DEFAULT,
-	SuiteB => SSL_PRESET_SUITEB,
+	Default => MBEDTLS_SSL_PRESET_DEFAULT,
+	SuiteB => MBEDTLS_SSL_PRESET_SUITEB,
 });
 
 define!(enum AuthMode -> c_int {
 	/// **INSECURE** on client, default on server
-	None => SSL_VERIFY_NONE,
+	None => MBEDTLS_SSL_VERIFY_NONE,
 	/// **INSECURE**
-	Optional => SSL_VERIFY_OPTIONAL,
+	Optional => MBEDTLS_SSL_VERIFY_OPTIONAL,
 	/// default on client
-	Required => SSL_VERIFY_REQUIRED,
+	Required => MBEDTLS_SSL_VERIFY_REQUIRED,
 });
 
 define!(enum UseSessionTickets -> c_int {
-	Enabled => SSL_SESSION_TICKETS_ENABLED,
-	Disabled => SSL_SESSION_TICKETS_DISABLED,
+	Enabled => MBEDTLS_SSL_SESSION_TICKETS_ENABLED,
+	Disabled => MBEDTLS_SSL_SESSION_TICKETS_DISABLED,
 });
 
 callback!(DbgCallback:Sync(level: c_int, file: *const c_char, line: c_int, message: *const c_char) -> ());
 
-define!(struct Config<'c>(ssl_config) {
-	fn init = ssl_config_init;
-	fn drop = ssl_config_free;
+define!(struct Config<'c>(mbedtls_ssl_config) {
+	fn init = mbedtls_ssl_config_init;
+	fn drop = mbedtls_ssl_config_free;
 	impl<'q> Into<*>;
 	impl<'q> UnsafeFrom<*>;
 });
@@ -72,13 +86,13 @@ impl<'c> Config<'c> {
     }
 
     // need bitfield support getter!(endpoint() -> Endpoint = field endpoint);
-    setter!(set_endpoint(e: Endpoint) = ssl_conf_endpoint);
+    setter!(set_endpoint(e: Endpoint) = mbedtls_ssl_conf_endpoint);
     // need bitfield support getter!(transport() -> Transport = field transport);
-    setter!(set_transport(t: Transport) = ssl_conf_transport);
+    setter!(set_transport(t: Transport) = mbedtls_ssl_conf_transport);
     // need bitfield support getter!(authmode() -> AuthMode = field authmode);
-    setter!(set_authmode(am: AuthMode) = ssl_conf_authmode);
+    setter!(set_authmode(am: AuthMode) = mbedtls_ssl_conf_authmode);
     getter!(read_timeout() -> u32 = .read_timeout);
-    setter!(set_read_timeout(t: u32) = ssl_conf_read_timeout);
+    setter!(set_read_timeout(t: u32) = mbedtls_ssl_conf_read_timeout);
 
     fn check_c_list<T: Default + Eq>(list: &[T]) {
         assert!(list.last() == Some(&T::default()));
@@ -99,7 +113,7 @@ impl<'c> Config<'c> {
         unsafe { ssl_conf_curves(&mut self.inner, list.as_ptr()) }
     }
 
-    setter!(set_cert_profile(p: &'c Profile) = ssl_conf_cert_profile);
+    setter!(set_cert_profile(p: &'c Profile) = mbedtls_ssl_conf_cert_profile);
 
     /// Takes both DER and PEM forms of FFDH parameters in `DHParams` format.
     ///
@@ -160,10 +174,10 @@ impl<'c> Config<'c> {
     }
 
     /// Client only: whether to remember and use session tickets
-    setter!(set_session_tickets(u: UseSessionTickets) = ssl_conf_session_tickets);
+    setter!(set_session_tickets(u: UseSessionTickets) = mbedtls_ssl_conf_session_tickets);
 
     /// Client only: minimal FFDH group size
-    setter!(set_ffdh_min_bitlen(bitlen: c_uint) = ssl_conf_dhm_min_bitlen);
+    setter!(set_ffdh_min_bitlen(bitlen: c_uint) = mbedtls_ssl_conf_dhm_min_bitlen);
 
     // TODO: The lifetime restrictions on HandshakeContext here are too strict.
     // Once we need something else, we might fix it.
@@ -214,7 +228,7 @@ impl<'c> Config<'c> {
                 Some(ve) => ve,
                 // This can only happen if mbedtls is setting flags in VerifyError that are
                 // missing from our definition.
-                None => return ::mbedtls_sys::ERR_X509_BAD_INPUT_DATA,
+                None => return ::mbedtls_sys::MBEDTLS_ERR_X509_BAD_INPUT_DATA,
             };
             let res = cb(crt, depth, &mut verify_error);
             *flags = verify_error.bits();
@@ -234,10 +248,10 @@ impl<'c> Config<'c> {
     }
 }
 
-setter_callback!(Config<'c>::set_rng(f: ::rng::Random) = ssl_conf_rng);
-setter_callback!(Config<'c>::set_dbg(f: DbgCallback) = ssl_conf_dbg);
+setter_callback!(Config<'c>::set_rng(f: ::rng::Random) = mbedtls_ssl_conf_rng);
+setter_callback!(Config<'c>::set_dbg(f: DbgCallback) = mbedtls_ssl_conf_dbg);
 
-define!(struct KeyCert(ssl_key_cert) {
+define!(struct KeyCert(mbedtls_ssl_key_cert) {
 	impl<'a> UnsafeFrom<*>;
 });
 

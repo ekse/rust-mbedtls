@@ -15,14 +15,26 @@ use core::ptr;
 use alloc_prelude::*;
 
 use mbedtls_sys::types::raw_types::c_char;
-use mbedtls_sys::*;
+
+#[mbedtls_use]
+use {
+    mbedtls_x509_crt, mbedtls_x509_crt_check_extended_key_usage, mbedtls_x509_crt_check_key_usage,
+    mbedtls_x509_crt_info, mbedtls_x509_crt_parse, mbedtls_x509_crt_parse_der,
+    mbedtls_x509_crt_verify, mbedtls_x509_crt_verify_info, mbedtls_x509_dn_gets,
+    mbedtls_x509_serial_gets, mbedtls_x509write_crt_der, mbedtls_x509write_crt_pem,
+    mbedtls_x509write_crt_set_basic_constraints, mbedtls_x509write_crt_set_extension,
+    mbedtls_x509write_crt_set_issuer_key, mbedtls_x509write_crt_set_issuer_name,
+    mbedtls_x509write_crt_set_key_usage, mbedtls_x509write_crt_set_md_alg,
+    mbedtls_x509write_crt_set_serial, mbedtls_x509write_crt_set_subject_key,
+    mbedtls_x509write_crt_set_subject_name, mbedtls_x509write_crt_set_validity,
+};
 
 use error::IntoResult;
 use private::UnsafeFrom;
 
-define!(struct Certificate(x509_crt) {
-	fn init=x509_crt_init;
-	fn drop=x509_crt_free;
+define!(struct Certificate(mbedtls_x509_crt) {
+	fn init = mbedtls_x509_crt_init;
+	fn drop = mbedtls_x509_crt_free;
 });
 
 impl Certificate {
@@ -368,9 +380,9 @@ impl<'c, 'r> From<&'c mut List<'r>> for &'c mut LinkedCertificate {
     }
 }
 
-define!(struct Builder<'a>(x509write_cert) {
-	pub fn new=x509write_crt_init;
-	fn drop=x509write_crt_free;
+define!(struct Builder<'a>(mbedtls_x509write_cert) {
+	pub fn new=mbedtls_x509write_crt_init;
+	fn drop=mbedtls_x509write_crt_free;
 });
 
 impl<'a> Builder<'a> {

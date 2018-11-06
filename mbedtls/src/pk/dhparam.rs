@@ -7,12 +7,16 @@
  * according to those terms. */
 
 use error::IntoResult;
+
+#[mbedtls_use]
+use mbedtls_dhm_parse_dhm;
+
 use mbedtls_sys::*;
 
 define!(#[repr(C)]
-struct Dhm(dhm_context) {
-	fn init = dhm_init;
-	fn drop = dhm_free;
+struct Dhm(mbedtls_dhm_context) {
+	fn init = mbedtls_dhm_init;
+	fn drop = mbedtls_dhm_free;
 	impl<'a> Into<*>;
 });
 

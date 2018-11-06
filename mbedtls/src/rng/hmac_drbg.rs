@@ -8,18 +8,22 @@
 
 use mbedtls_sys::types::raw_types::{c_int, c_uchar, c_void};
 use mbedtls_sys::types::size_t;
-pub use mbedtls_sys::HMAC_DRBG_RESEED_INTERVAL as RESEED_INTERVAL;
-use mbedtls_sys::{
-    hmac_drbg_random, hmac_drbg_reseed, hmac_drbg_seed, hmac_drbg_seed_buf,
-    hmac_drbg_set_prediction_resistance, hmac_drbg_update, HMAC_DRBG_PR_OFF, HMAC_DRBG_PR_ON,
+pub use mbedtls_sys::MBEDTLS_HMAC_DRBG_RESEED_INTERVAL as RESEED_INTERVAL;
+
+#[mbedtls_use]
+use {
+    mbedtls_entropy_update_manual, mbedtls_hmac_drbg_random, mbedtls_hmac_drbg_reseed,
+    mbedtls_hmac_drbg_seed, mbedtls_hmac_drbg_seed_buf, mbedtls_hmac_drbg_set_entropy_len,
+    mbedtls_hmac_drbg_set_prediction_resistance, mbedtls_hmac_drbg_update,
+    MBEDTLS_HMAC_DRBG_PR_OFF, MBEDTLS_HMAC_DRBG_PR_ON,
 };
 
 use super::{EntropyCallback, RngCallback};
 use error::IntoResult;
 
-define!(struct HmacDrbg<'entropy>(hmac_drbg_context) {
-	fn init=hmac_drbg_init;
-	fn drop=hmac_drbg_free;
+define!(struct HmacDrbg<'entropy>(mbedtls_hmac_drbg_context) {
+	fn init=mbedtls_hmac_drbg_init;
+	fn drop=mbedtls_hmac_drbg_free;
 });
 
 #[cfg(feature = "threading")]
@@ -65,7 +69,7 @@ impl<'entropy> HmacDrbg<'entropy> {
     }
 
     pub fn prediction_resistance(&self) -> bool {
-        if self.inner.prediction_resistance == HMAC_DRBG_PR_OFF {
+        if self.inner.prediction_resistance == HMAC_DRBG_PR_OFF as c_int {
             false
         } else {
             true
@@ -77,18 +81,18 @@ impl<'entropy> HmacDrbg<'entropy> {
             hmac_drbg_set_prediction_resistance(
                 &mut self.inner,
                 if pr {
-                    HMAC_DRBG_PR_ON
+                    HMAC_DRBG_PR_ON as c_int
                 } else {
-                    HMAC_DRBG_PR_OFF
+                    HMAC_DRBG_PR_OFF as c_int
                 },
             )
         }
     }
 
     getter!(entropy_len() -> size_t = .entropy_len);
-    setter!(set_entropy_len(len: size_t) = hmac_drbg_set_entropy_len);
+    setter!(set_entropy_len(len: size_t) = mbedtls_hmac_drbg_set_entropy_len);
     getter!(reseed_interval() -> c_int = .reseed_interval);
-    setter!(set_reseed_interval(i: c_int) = hmac_drbg_set_reseed_interval);
+    setter!(set_reseed_interval(i: c_int) = mbedtls_hmac_drbg_set_reseed_interval);
 
     pub fn reseed(&mut self, additional_entropy: Option<&[u8]>) -> ::Result<()> {
         unsafe {

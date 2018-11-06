@@ -7,11 +7,15 @@
  * according to those terms. */
 
 use error::IntoResult;
+
+#[mbedtls_use]
+use {mbedtls_mpi_lset, mbedtls_mpi_read_binary, mbedtls_mpi_sint};
+
 use mbedtls_sys::*;
 
-define!(struct Mpi(mpi) {
-	fn init=mpi_init;
-	fn drop=mpi_free;
+define!(struct Mpi(mbedtls_mpi) {
+	fn init = mbedtls_mpi_init;
+	fn drop = mbedtls_mpi_free;
 	impl<'a> Into<*>;
 });
 

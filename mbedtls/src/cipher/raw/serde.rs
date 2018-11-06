@@ -15,12 +15,18 @@ use core::mem::size_of;
 use core::ptr;
 use core::slice::from_raw_parts;
 use core::str;
-use mbedtls_sys::*;
 use serde;
 use serde::de::Unexpected;
 use serde::ser::SerializeSeq;
 use serde::{de, ser};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+#[mbedtls_use]
+use {
+    mbedtls_aes_context, mbedtls_cipher_context_t, mbedtls_cipher_id_t, mbedtls_cipher_mode_t,
+    mbedtls_des3_context, mbedtls_des_context, MBEDTLS_CIPHER_ID_3DES, MBEDTLS_CIPHER_ID_AES,
+    MBEDTLS_CIPHER_ID_DES, MBEDTLS_MODE_CBC, MBEDTLS_MODE_CFB, MBEDTLS_MODE_CTR,
+};
 
 struct Bytes<T: BytesSerde>(T);
 

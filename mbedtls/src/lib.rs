@@ -24,6 +24,8 @@ extern crate core_io;
 #[macro_use]
 extern crate bitflags;
 extern crate mbedtls_sys;
+#[macro_use]
+extern crate mbedtls_use;
 
 extern crate serde;
 #[macro_use]
