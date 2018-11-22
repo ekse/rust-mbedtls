@@ -105,6 +105,8 @@ impl super::BuildConfig {
             .prepend_enum_name(false)
             .ctypes_prefix("raw_types")
             .parse_callbacks(Box::new(ParseCallbacks{}))
+            .blacklist_type("max_align_t")
+            .generate_comments(false)
             .generate()
             .expect("bindgen error");
 
