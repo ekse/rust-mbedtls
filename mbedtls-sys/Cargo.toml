@@ -32,7 +32,7 @@ cmake = "0.1.17"
 # * strstr/strlen/strncpy/strncmp/strcmp/snprintf
 # * memmove/memcpy/memcmp/memset
 # * rand/printf (used only for self tests. optionally use custom_printf)
-default = ["std", "zlib", "time", "pthread", "aesni"]
+default = ["std", "time", "aesni"]
 std = []
 custom_printf = []
 custom_has_support = []

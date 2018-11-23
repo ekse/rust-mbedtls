@@ -30,6 +30,7 @@ impl super::BuildConfig {
         let mut dst = cmk.build();
         dst.push("build");
         dst.push("library");
+        dst.push("Debug");
         println!(
             "cargo:rustc-link-search=native={}",
             dst.to_str().expect("link-search UTF-8 error")
